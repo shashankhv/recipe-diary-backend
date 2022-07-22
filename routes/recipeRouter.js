@@ -138,7 +138,6 @@ recipeRouter
       )
         .then(
           (recipe) => {
-            console.log("Dish Created ", recipe);
             res.statusCode = 200;
             res.setHeader("Content-Type", "application/json");
             res.json(recipe);
@@ -149,7 +148,6 @@ recipeRouter
     }
   )
   .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-    console.log(req.user);
     Recipe.findById(req.params.recipeId)
       .then((recipe) => {
         if (recipe.author === req.user._id || req.user.admin) {
@@ -222,17 +220,15 @@ recipeRouter
             if (req.body.parent === null) {
               delete req.body["parent"];
               delete req.body["replyAuthor"];
-
               req.body.author = req.user._id;
               req.body.children = [];
-              console.log("POST", req.params.recipeId, req.body);
               Comment.create(req.body).then(
                 (comment) => {
                   recipe.comments.push(comment._id);
                   recipe.save().then(
                     (recipe) => {
                       Recipe.findById(recipe._id)
-                        .populate(["comments", "author"])
+                        // .populate(["comments", "author"])
                         .then((recipe) => {
                           res.statusCode = 200;
                           res.setHeader("Content-Type", "application/json");
@@ -260,37 +256,11 @@ recipeRouter
                         parentComment.children.push(comment._id);
                         parentComment.save().then(
                           (updatedComment) => {
-                            Recipe.findById(recipe._id)
-                              .populate({
-                                path: "comments",
-                                populate: [
-                                  {
-                                    path: "author",
-                                    model: "User",
-                                  },
-                                  {
-                                    path: "children",
-                                    populate: [
-                                      {
-                                        path: "author",
-                                        model: "User",
-                                      },
-                                      {
-                                        path: "replyAuthor",
-                                        model: "User",
-                                      },
-                                    ],
-                                  },
-                                ],
-                              })
-                              .then((recipe) => {
-                                res.statusCode = 200;
-                                res.setHeader(
-                                  "Content-Type",
-                                  "application/json"
-                                );
-                                res.json({ status: "success", recipe: recipe });
-                              });
+                            Recipe.findById(recipe._id).then((recipe) => {
+                              res.statusCode = 200;
+                              res.setHeader("Content-Type", "application/json");
+                              res.json({ status: "success", recipe: recipe });
+                            });
                           },
                           (err) => next(err)
                         );
@@ -332,13 +302,11 @@ recipeRouter
             }
             recipe.save().then(
               (recipe) => {
-                Recipe.findById(recipe._id)
-                  .populate("comments.author")
-                  .then((recipe) => {
-                    res.statusCode = 200;
-                    res.setHeader("Content-Type", "application/json");
-                    res.json(recipe);
-                  });
+                Recipe.findById(recipe._id).then((recipe) => {
+                  res.statusCode = 200;
+                  res.setHeader("Content-Type", "application/json");
+                  res.json({ status: "Successful", recipe: recipe });
+                });
               },
               (err) => next(err)
             );
@@ -361,18 +329,68 @@ recipeRouter
   })
   .get(cors.cors, (req, res, next) => {
     Recipe.findById(req.params.recipeId)
-      .populate("comments.author")
+      .populate({
+        path: "comments",
+        populate: [
+          {
+            path: "author",
+            model: "User",
+          },
+          {
+            path: "children",
+            populate: [
+              {
+                path: "author",
+                model: "User",
+              },
+              {
+                path: "replyAuthor",
+                model: "User",
+              },
+            ],
+          },
+        ],
+      })
       .then(
         (recipe) => {
           if (
             recipe != null &&
-            recipe.comments.id(req.params.commentId) != null
+            recipe.comments.some((value) =>
+              value._id.equals(req.params.commentId)
+            )
           ) {
             res.statusCode = 200;
             res.setHeader("Content-Type", "application/json");
-            res.json(recipe.comments.id(req.params.commentId));
+
+            res.json(
+              recipe.comments.filter(
+                (comment) => comment._id.toString() === req.params.commentId
+              )[0]
+            );
+          } else if (recipe != null && recipe.comments.length > 0) {
+            for (var i = 0; i < recipe.comments.length; i++) {
+              if (recipe.comments[i].children.length > 0) {
+                if (
+                  recipe.comments[i].children.some((value) =>
+                    value._id.equals(req.params.commentId)
+                  )
+                ) {
+                  res.statusCode = 200;
+                  res.setHeader("Content-Type", "application/json");
+                  return res.json(
+                    recipe.comments[i].children.filter(
+                      (comment) =>
+                        comment._id.toString() === req.params.commentId
+                    )[0]
+                  );
+                }
+              }
+            }
+            err = new Error("Comment " + req.params.commentId + " not found");
+            err.status = 404;
+            return next(err);
           } else if (recipe == null) {
-            err = new Error("Dish " + req.params.recipeId + " not found");
+            err = new Error("Recipe " + req.params.recipeId + " not found");
             err.status = 404;
             return next(err);
           } else {
@@ -396,39 +414,81 @@ recipeRouter
   })
   .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     Recipe.findById(req.params.recipeId)
+      .populate({
+        path: "comments",
+        populate: [
+          {
+            path: "author",
+            model: "User",
+          },
+          {
+            path: "children",
+            populate: [
+              {
+                path: "author",
+                model: "User",
+              },
+              {
+                path: "replyAuthor",
+                model: "User",
+              },
+            ],
+          },
+        ],
+      })
       .then(
-        (recipe) => {
+        async (recipe) => {
           if (
             recipe != null &&
-            recipe.comments.id(req.params.commentId) != null
+            recipe.comments.some((value) =>
+              value._id.equals(req.params.commentId)
+            )
           ) {
-            if (
-              req.user._id.toString() ==
-              recipe.comments.id(req.params.commentId).author._id.toString()
-            ) {
-              if (req.body.rating) {
-                recipe.comments.id(req.params.commentId).rating =
-                  req.body.rating;
+            Comment.findByIdAndUpdate(
+              req.params.commentId,
+              {
+                $set: req.body,
+              },
+              { new: true }
+            )
+              .then((comment) => {
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/json");
+
+                res.json(comment);
+              })
+              .catch((err) => next(err));
+          } else if (recipe != null && recipe.comments.length > 0) {
+            for (var i = 0; i < recipe.comments.length; i++) {
+              if (recipe.comments[i].children.length > 0) {
+                if (
+                  recipe.comments[i].children.some((value) =>
+                    value._id.equals(req.params.commentId)
+                  )
+                ) {
+                  await ChildComment.findByIdAndUpdate(
+                    req.params.commentId,
+                    {
+                      $set: req.body,
+                    },
+                    { new: true }
+                  )
+                    .then((comment) => {
+                      res.statusCode = 200;
+                      res.setHeader("Content-Type", "application/json");
+                      return res.json(comment);
+                    })
+                    .catch((err) => {
+                      return next(err);
+                    });
+                }
               }
-              if (req.body.comment) {
-                recipe.comments.id(req.params.commentId).comment =
-                  req.body.comment;
-              }
-              recipe.save().then((recipe) => {
-                Recipe.findById(recipe._id)
-                  .populate("comments.author")
-                  .then((recipe) => {
-                    res.statusCode = 200;
-                    res.setHeader("Content-Type", "application/json");
-                    res.json(recipe);
-                  });
-              });
-            } else {
-              res.statusCode = 403;
-              res.end("You cannot edit a comment you didn't write yourself");
             }
+            err = new Error("Comment " + req.params.commentId + " not found");
+            err.status = 404;
+            return next(err);
           } else if (recipe == null) {
-            err = new Error("Dish " + req.params.recipeId + " not found");
+            err = new Error("Recipe " + req.params.recipeId + " not found");
             err.status = 404;
             return next(err);
           } else {
@@ -443,32 +503,148 @@ recipeRouter
   })
   .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     Recipe.findById(req.params.recipeId)
-      .then((recipe) => {
+      .populate({
+        path: "comments",
+        populate: [
+          {
+            path: "author",
+            model: "User",
+          },
+          {
+            path: "children",
+            populate: [
+              {
+                path: "author",
+                model: "User",
+              },
+              {
+                path: "replyAuthor",
+                model: "User",
+              },
+            ],
+          },
+        ],
+      })
+      .then(async (recipe) => {
         if (
           recipe != null &&
-          recipe.comments.id(req.params.commentId) != null
+          recipe.comments.some(
+            (value) => value._id.toString() === req.params.commentId
+          )
         ) {
-          if (
-            req.user._id.toString() ==
-            recipe.comments.id(req.params.commentId).author._id.toString()
-          ) {
-            recipe.comments.id(req.params.commentId).remove();
-            recipe.save().then(
-              (recipe) => {
-                Recipe.findById(recipe._id)
-                  .populate("comments.author")
+          Comment.findById(req.params.commentId)
+            .then((comment) => {
+              if (
+                recipe.author.equals(req.user._id.toString()) ||
+                comment.author.equals(req.user._id.toString())
+              ) {
+                recipe.comments.splice(recipe.comments.indexOf(comment), 1);
+                recipe
+                  .save()
                   .then((recipe) => {
-                    res.statusCode = 200;
-                    res.setHeader("Content-Type", "application/json");
-                    res.json(recipe);
-                  });
-              },
-              (err) => next(err)
-            );
-          } else {
-            res.statusCode = 403;
-            res.end("You cannot delete a comment you didn't write yourself");
+                    Recipe.findById(recipe._id)
+                      .populate({
+                        path: "comments",
+                        populate: [
+                          {
+                            path: "author",
+                            model: "User",
+                          },
+                          {
+                            path: "children",
+                            populate: [
+                              {
+                                path: "author",
+                                model: "User",
+                              },
+                              {
+                                path: "replyAuthor",
+                                model: "User",
+                              },
+                            ],
+                          },
+                        ],
+                      })
+                      .then((recipe) => {
+                        res.statusCode = 200;
+                        res.setHeader("Content-Type", "application/json");
+                        res.json(recipe);
+                      })
+                      .catch((err) => next(err));
+                  })
+                  .catch((err) => next(err));
+              } else {
+                res.statusCode = 403;
+                res.end(
+                  "You cannot delete a comment you didn't write yourself "
+                );
+              }
+            })
+            .catch((err) => next(err));
+        } else if (recipe != null && recipe.comments.length > 0) {
+          for (var i = 0; i < recipe.comments.length; i++) {
+            if (recipe.comments[i].children.length > 0) {
+              if (
+                recipe.comments[i].children.some((value) =>
+                  value._id.equals(req.params.commentId)
+                )
+              ) {
+                for (var p = 0; p < recipe.comments[i].children.length; p++) {
+                  if (
+                    recipe.comments[i].children[p]._id.equals(
+                      req.params.commentId
+                    )
+                  ) {
+                    await Comment.findById(recipe.comments[i]._id)
+                      .then(async (parentComment) => {
+                        parentComment.children.splice(p, 1);
+                        await parentComment
+                          .save()
+                          .then(async (comment) => {
+                            await Recipe.findById(req.params.recipeId)
+                              .populate({
+                                path: "comments",
+                                populate: [
+                                  {
+                                    path: "author",
+                                    model: "User",
+                                  },
+                                  {
+                                    path: "children",
+                                    populate: [
+                                      {
+                                        path: "author",
+                                        model: "User",
+                                      },
+                                      {
+                                        path: "replyAuthor",
+                                        model: "User",
+                                      },
+                                    ],
+                                  },
+                                ],
+                              })
+                              .then((updatedRecipe) => {
+                                res.statusCode = 200;
+                                res.setHeader(
+                                  "Content-Type",
+                                  "application/json"
+                                );
+                                return res.json(updatedRecipe);
+                              })
+                              .catch((err) => next(err));
+                          })
+                          .catch((err) => next(err));
+                      })
+                      .catch((err) => next(err));
+                  }
+                }
+              }
+            }
           }
+          err = new Error("Comment " + req.params.commentId + " not found");
+          err.status = 404;
+          return next(err);
         } else if (recipe == null) {
           err = new Error("Dish " + req.params.recipeId + " not found");
           err.status = 404;
@@ -483,166 +659,3 @@ recipeRouter
   });
 
 module.exports = recipeRouter;
-
-// commentRouter
-//   .route("/:recipeId")
-//   .options(cors.corsWithOptions, (req, res) => {
-//     res.sendStatus(200);
-//   })
-//   .get(cors.cors, (req, res, next) => {
-//     Comments.find(req.params.recipeId)
-//       .populate(["author", "dish", "children"])
-//       .then(
-//         (comments) => {
-//           res.statusCode = 200;
-//           res.setHeader("Content-Type", "application/json");
-//           res.json(comments);
-//         },
-//         (err) => next(err)
-//       )
-//       .catch((err) => next(err));
-//   })
-//   .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-//     if (req.body != null) {
-//       req.body.author = req.user._id;
-//       Comments.create(req.body)
-//         .then(
-//           (comment) => {
-//             Comments.findById(comment._id)
-//               .populate("author")
-//               .then((comment) => {
-//                 res.statusCode = 200;
-//                 res.setHeader("Content-Type", "application/json");
-//                 res.json(comment);
-//               });
-//           },
-//           (err) => next(err)
-//         )
-//         .catch((err) => next(err));
-//     } else {
-//       err = new Error("Comment not found in request body");
-//       err.status = 404;
-//       return next(err);
-//     }
-//   })
-//   .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-//     res.statusCode = 403;
-//     res.end("PUT operation not supported on /comments/");
-//   })
-//   .delete(
-//     cors.corsWithOptions,
-//     authenticate.verifyUser,
-//     authenticate.verifyAdmin,
-//     (req, res, next) => {
-//       Comments.remove({})
-//         .then(
-//           (resp) => {
-//             res.statusCode = 200;
-//             res.setHeader("Content-Type", "application/json");
-//             res.json(resp);
-//           },
-//           (err) => next(err)
-//         )
-//         .catch((err) => next(err));
-//     }
-//   );
-
-// commentRouter
-//   .route("/:commentId")
-//   .options(cors.corsWithOptions, (req, res) => {
-//     res.sendStatus(200);
-//   })
-//   .get(cors.cors, (req, res, next) => {
-//     Comments.findById(req.params.commentId)
-//       .populate("author")
-//       .then(
-//         (comment) => {
-//           res.statusCode = 200;
-//           res.setHeader("Content-Type", "application/json");
-//           res.json(comment);
-//         },
-//         (err) => next(err)
-//       )
-//       .catch((err) => next(err));
-//   })
-//   .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-//     res.statusCode = 403;
-//     res.end(
-//       "POST operation not supported on /comments/" + req.params.commentId
-//     );
-//   })
-//   .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-//     Comments.findById(req.params.commentId)
-//       .then(
-//         (comment) => {
-//           if (comment != null) {
-//             if (!comment.author.equals(req.user._id)) {
-//               var err = new Error(
-//                 "You are not authorized to update this comment!"
-//               );
-//               err.status = 403;
-//               return next(err);
-//             }
-//             req.body.author = req.user._id;
-//             Comments.findByIdAndUpdate(
-//               req.params.commentId,
-//               {
-//                 $set: req.body,
-//               },
-//               { new: true }
-//             ).then(
-//               (comment) => {
-//                 Comments.findById(comment._id)
-//                   .populate("author")
-//                   .then((comment) => {
-//                     res.statusCode = 200;
-//                     res.setHeader("Content-Type", "application/json");
-//                     res.json(comment);
-//                   });
-//               },
-//               (err) => next(err)
-//             );
-//           } else {
-//             err = new Error("Comment " + req.params.commentId + " not found");
-//             err.status = 404;
-//             return next(err);
-//           }
-//         },
-//         (err) => next(err)
-//       )
-//       .catch((err) => next(err));
-//   })
-//   .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-//     Comments.findById(req.params.commentId)
-//       .then(
-//         (comment) => {
-//           if (comment != null) {
-//             if (!comment.author.equals(req.user._id)) {
-//               var err = new Error(
-//                 "You are not authorized to delete this comment!"
-//               );
-//               err.status = 403;
-//               return next(err);
-//             }
-//             Comments.findByIdAndRemove(req.params.commentId)
-//               .then(
-//                 (resp) => {
-//                   res.statusCode = 200;
-//                   res.setHeader("Content-Type", "application/json");
-//                   res.json(resp);
-//                 },
-//                 (err) => next(err)
-//               )
-//               .catch((err) => next(err));
-//           } else {
-//             err = new Error("Comment " + req.params.commentId + " not found");
-//             err.status = 404;
-//             return next(err);
-//           }
-//         },
-//         (err) => next(err)
-//       )
-//       .catch((err) => next(err));
-//   });
-
-// module.exports = commentRouter;
