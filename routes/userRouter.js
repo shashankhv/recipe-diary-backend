@@ -4,6 +4,7 @@ const User = require("../models/users");
 var passport = require("passport");
 var authenticate = require("../config/authenticate");
 const cors = require("./cors");
+const Recipe = require("../models/recipes");
 
 var userRouter = express.Router();
 userRouter.use(bodyParser.json());
@@ -197,5 +198,229 @@ userRouter.get("/checkJWTtoken", cors.corsWithOptions, (req, res) => {
     }
   })(req, res);
 });
+
+userRouter
+  .route("/favorites")
+  .options(cors.corsWithOptions, (req, res) => {
+    res.sendStatus(200);
+  })
+  .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    User.findById(req.user._id)
+      .then(
+        (user) => {
+          if (user != null) {
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.json(user.favorites);
+          } else {
+            err = new Error("User favorites not found");
+            err.status = 404;
+            return next(err);
+          }
+        },
+        (err) => next(err)
+      )
+      .catch((err) => next(err));
+  })
+  .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    User.findById(req.user._id)
+      // .populate("favorites.recipes")
+      .then(
+        (user) => {
+          if (user != null) {
+            if (user.favorites[req.body.category]) {
+              Recipe.findById(req.body.id, (err, recipe) => {
+                if (err) {
+                  err = new Error(
+                    "Recipe doesn't exist, hence it cannot be added to your favorites "
+                  );
+                  err.status = 404;
+                  return next(err);
+                }
+                if (recipe) {
+                  if (
+                    !user.favorites[req.body.category].includes(req.body.id)
+                  ) {
+                    user.favorites[req.body.category] = [
+                      ...user.favorites[req.body.category],
+                      req.body.id,
+                    ];
+                  }
+                  user.save().then(
+                    (user) => {
+                      res.statusCode = 200;
+                      res.setHeader("Content-Type", "application/json");
+                      res.json(user.favorites[req.body.category]);
+                    },
+                    (err) => next(err)
+                  );
+                }
+              });
+            } else {
+              err = new Error(
+                req.body.category + " is not a category in favorites"
+              );
+              err.status = 404;
+              return next(err);
+            }
+          } else {
+            err = new Error("User favorites not found");
+            err.status = 404;
+            return next(err);
+          }
+        },
+        (err) => next(err)
+      )
+      .catch((err) => next(err));
+  })
+  .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    res.statusCode = 403;
+    res.end("Put operation not supported on /users/favorites/");
+  })
+  .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    User.findById(req.user._id)
+      .then((user) => {
+        if (user != null) {
+          if (user.favorites[req.body.category]) {
+            if (user.favorites[req.body.category].includes(req.body.id)) {
+              user.favorites[req.body.category].splice(
+                user.favorites[req.body.category].indexOf(req.body.id),
+                1
+              );
+            }
+            user.save().then(
+              (user) => {
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/json");
+                res.json(user.favorites[req.body.category]);
+              },
+              (err) => next(err)
+            );
+          } else {
+            err = new Error(
+              req.body.category + " is not a category in favorites"
+            );
+            err.status = 404;
+            return next(err);
+          }
+        } else {
+          err = new Error("Favorite not found");
+          err.status = 404;
+          return next(err);
+        }
+      })
+      .catch((err) => next(err));
+  });
+
+userRouter
+  .route("/recents")
+  .options(cors.corsWithOptions, (req, res) => {
+    res.sendStatus(200);
+  })
+  .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    User.findById(req.user._id)
+      .then(
+        (user) => {
+          if (user != null) {
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.json(user.recents);
+          } else {
+            err = new Error("User recents not found");
+            err.status = 404;
+            return next(err);
+          }
+        },
+        (err) => next(err)
+      )
+      .catch((err) => next(err));
+  })
+  .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    User.findById(req.user._id)
+      // .populate("recents.recipes")
+      .then(
+        (user) => {
+          if (user != null) {
+            if (user.recents[req.body.category]) {
+              Recipe.findById(req.body.id, (err, recipe) => {
+                if (err) {
+                  err = new Error(
+                    "Recipe doesn't exist, hence it cannot be added to your recents "
+                  );
+                  err.status = 404;
+                  return next(err);
+                }
+                if (recipe) {
+                  if (!user.recents[req.body.category].includes(req.body.id)) {
+                    user.recents[req.body.category] = [
+                      ...user.recents[req.body.category],
+                      req.body.id,
+                    ];
+                  }
+                  user.save().then(
+                    (user) => {
+                      res.statusCode = 200;
+                      res.setHeader("Content-Type", "application/json");
+                      res.json(user.recents[req.body.category]);
+                    },
+                    (err) => next(err)
+                  );
+                }
+              });
+            } else {
+              err = new Error(
+                req.body.category + " is not a category in recents"
+              );
+              err.status = 404;
+              return next(err);
+            }
+          } else {
+            err = new Error("User recents not found");
+            err.status = 404;
+            return next(err);
+          }
+        },
+        (err) => next(err)
+      )
+      .catch((err) => next(err));
+  })
+  .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    res.statusCode = 403;
+    res.end("Put operation not supported on /users/recents/");
+  })
+  .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    User.findById(req.user._id)
+      .then((user) => {
+        if (user != null) {
+          if (user.recents[req.body.category]) {
+            if (user.recents[req.body.category].includes(req.body.id)) {
+              user.recents[req.body.category].splice(
+                user.recents[req.body.category].indexOf(req.body.id),
+                1
+              );
+            }
+            user.save().then(
+              (user) => {
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/json");
+                res.json(user.recents[req.body.category]);
+              },
+              (err) => next(err)
+            );
+          } else {
+            err = new Error(
+              req.body.category + " is not a category in recents"
+            );
+            err.status = 404;
+            return next(err);
+          }
+        } else {
+          err = new Error("Recents not found");
+          err.status = 404;
+          return next(err);
+        }
+      })
+      .catch((err) => next(err));
+  });
 
 module.exports = userRouter;
