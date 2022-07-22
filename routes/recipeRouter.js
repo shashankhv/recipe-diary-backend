@@ -150,7 +150,6 @@ recipeRouter
     console.log(req.user);
     Recipe.findById(req.params.recipeId)
       .then((recipe) => {
-        console.log("RECIPES", recipe, res.user);
         if (recipe.author === req.user._id || req.user.admin) {
           Recipe.findByIdAndRemove(req.params.recipeId)
             .then((resp) => {

@@ -113,18 +113,55 @@ userRouter.post("/login", cors.corsWithOptions, (req, res, next) => {
   })(req, res, next);
 });
 
-userRouter.get("/logout", cors.corsWithOptions, (req, res, next) => {
-  // console.log("\n\nREQ:", req.session);
-  // if (req.session) {
-  //   req.session.destroy();
-  //   res.clearCookie("session-id");
-  //   res.redirect("/");
-  // } else {
-  //   var err = new Error("You are not logged in!");
-  //   err.status = 403;
-  //   next(err);
-  // }
-});
+userRouter.post(
+  "/verifyUser",
+  cors.corsWithOptions,
+  authenticate.verifyUser,
+  (req, res, next) => {
+    User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: { isVerified: true },
+      },
+      { new: true }
+    )
+      .then(
+        (user) => {
+          console.log("User Updated ", user);
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.json(user);
+        },
+        (err) => next(err)
+      )
+      .catch((err) => next(err));
+  }
+);
+
+userRouter.post(
+  "/removeVerifyUser",
+  cors.corsWithOptions,
+  authenticate.verifyUser,
+  (req, res, next) => {
+    User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: { isVerified: false },
+      },
+      { new: true }
+    )
+      .then(
+        (user) => {
+          console.log("User Updated ", user);
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.json(user);
+        },
+        (err) => next(err)
+      )
+      .catch((err) => next(err));
+  }
+);
 
 /* FACEBOOK AUTHENTICATION */
 
