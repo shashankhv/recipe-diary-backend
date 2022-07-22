@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-
-var commentSchema = new Schema(
+var childCommentSchema = new Schema(
   {
     rating: {
       type: Number,
@@ -17,16 +16,12 @@ var commentSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    children: {
-      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "ChildComment" }],
-      default: [],
-    },
+    parent: { type: mongoose.Schema.Types.ObjectId, ref: "Comment" },
+    replyAuthor: { type: mongoose.Schema.Types.ObjectId, ref: "User" } | null,
   },
   {
     timestamps: true,
   }
 );
-
-var Comments = mongoose.model("Comment", commentSchema);
-
-module.exports = Comments;
+var ChildComment = mongoose.model("ChildComment", childCommentSchema);
+module.exports = ChildComment;
