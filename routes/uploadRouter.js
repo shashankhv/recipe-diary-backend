@@ -59,7 +59,7 @@ uploadRouter
   )
   .post(upload("recipes").single("imageFile"), async (req, res, next) => {
     if (!req.file) {
-      res.status(401).json({ error: "Please provide an image" });
+      return res.status(401).json({ error: "Please provide an image" });
     }
     console.log("file", req.file);
     var imagePath = path.join(__dirname, "..", "public/images/recipes");
@@ -68,7 +68,10 @@ uploadRouter
     // console.log("imagePath", imagePath, imageExt);
     const fileUpload = new Resize(imagePath, imageExt);
     const filename = await fileUpload.save(req.file.buffer);
-    return res.status(200).json({ name: filename });
+    return res.status(200).json({
+      name: filename,
+      url: "https://" + req.hostname + ":3443" + "/images/" + filename,
+    });
 
     // const img = {
     //   data: fs.readFileSync(
@@ -76,16 +79,6 @@ uploadRouter
     //   ),
     //   contentType: "image/png",
     // };
-
-    // Image.create(img)
-    //   .then((item) => {
-    //     // item.save();
-    //     res.statusCode = 200;
-    //     res.setHeader("Content-Type", "application/json");
-    //     // res.json({ filePath: item });
-    //     res.send(item);
-    //   })
-    //   .catch((err) => next(err));
   })
   .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     res.statusCode = 403;

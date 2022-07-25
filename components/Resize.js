@@ -18,8 +18,10 @@ class Resize {
 
     await sharp(buffer)
       .flatten({ background: "#F0A703" })
-      .resize(1080, 720, {
-        fit: sharp.fit.inside,
+      .resize(960, 720, {
+        width: 960,
+        height: 720,
+        fit: sharp.fit.cover,
         withoutEnlargement: false,
       })
 
