@@ -10,6 +10,7 @@ const ChildComment = require("../models/childComment");
 const User = require("../models/users");
 
 var recipeRouter = express.Router();
+recipeRouter.use(bodyParser.json());
 
 /* api endpoint for /recipes */
 recipeRouter
