@@ -19,13 +19,28 @@ recipeRouter
     res.sendStatus(200);
   })
   .get(cors.cors, (req, res, next) => {
+    console.log("GET", req.query);
     Recipe.find(req.query)
+      // .sort({})
+      .skip(req.query.offset)
+      .limit(req.query.limit)
       .populate(["author", "comments"])
       .then(
         (recipes) => {
-          res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
-          res.json(recipes);
+          console.log(recipes);
+          Recipe.count().then(
+            (count) => {
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
+              res.json({
+                results: recipes,
+                limit: Number(req.query.limit),
+                nextOffset: Number(req.query.offset) + Number(req.query.limit),
+                count,
+              });
+            },
+            (err) => next(err)
+          );
         },
         (err) => next(err)
       )
@@ -33,12 +48,13 @@ recipeRouter
   })
   .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     req.body.author = req.user._id;
+    req.body.featured = true;
     Recipe.create(req.body)
       .then(
         (recipe) => {
           res.statusCode = 200;
           res.setHeader("Content-Type", "application/json");
-          res.json(recipe);
+          res.json([recipe]);
         },
         (err) => next(err)
       )
@@ -79,7 +95,11 @@ recipeRouter
     authenticate.verifyAdmin,
     (req, res, next) => {
       req.body = req.body.map((recipe) => {
-        return { ...recipe, author: req.user._id };
+        return {
+          ...recipe,
+          author: req.user._id,
+          featured: Math.round(Math.random()) === 1 ? true : false,
+        };
       });
       Recipe.insertMany(req.body)
         .then(
