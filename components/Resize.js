@@ -3,9 +3,11 @@ const { v4 } = require("uuid");
 const path = require("path");
 
 class Resize {
-  constructor(folder, type) {
+  constructor(folder, type, width, height) {
     this.folder = folder;
     this.fileExt = type;
+    this.width = width;
+    this.height = height;
   }
 
   filepath = (filename) => {
@@ -17,10 +19,9 @@ class Resize {
     const filepath = this.filepath(filename);
 
     await sharp(buffer)
-      .flatten({ background: "#F0A703" })
-      .resize(960, 720, {
-        width: 960,
-        height: 720,
+      .resize(this.width, this.height, {
+        width: this.width,
+        height: this.height,
         fit: sharp.fit.cover,
         withoutEnlargement: false,
       })

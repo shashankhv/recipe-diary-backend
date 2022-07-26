@@ -15,7 +15,7 @@ passport.deserializeUser(User.deserializeUser());
 /* To generate Token using JwtWebToken and use sign method */
 exports.getToken = (user_id) => {
   // params are payload data, secret key for encription and other options
-  return jwt.sign(user_id, config.secretKey, { expiresIn: 31600 });
+  return jwt.sign(user_id, config.secretKey);
 };
 
 var optionsForJWTStragety = {};

@@ -31,10 +31,10 @@ const imageFileFilter = (req, file, cb) => {
   cb(null, true);
 };
 
-const upload = (ext) =>
+const upload = () =>
   multer({
     limits: {
-      fileSize: 4 * 1024 * 1024,
+      fileSize: 100 * 1920 * 1920,
     },
   });
 
@@ -57,29 +57,25 @@ uploadRouter
       res.end("GET operation not supported on /imageUpload");
     }
   )
-  .post(upload("recipes").single("imageFile"), async (req, res, next) => {
-    if (!req.file) {
-      return res.status(401).json({ error: "Please provide an image" });
+  .post(
+    cors.corsWithOptions,
+    authenticate.verifyUser,
+    upload().single("imageFile"),
+    async (req, res, next) => {
+      if (!req.file) {
+        return res.status(401).json({ error: "Please provide an image" });
+      }
+      var imagePath = path.join(__dirname, "..", "public/images/recipes");
+      var nameSplit = req.file.originalname.split(".");
+      var imageExt = nameSplit[nameSplit.length - 1];
+      const fileUpload = new Resize(imagePath, imageExt, 1920, 1440);
+      const filename = await fileUpload.save(req.file.buffer);
+      return res.status(200).json({
+        name: filename,
+        url: `https://${req.hostname}:3443/images/${req.body.folder}/${filename}`,
+      });
     }
-    console.log("file", req.file);
-    var imagePath = path.join(__dirname, "..", "public/images/recipes");
-    var nameSplit = req.file.originalname.split(".");
-    var imageExt = nameSplit[nameSplit.length - 1];
-    // console.log("imagePath", imagePath, imageExt);
-    const fileUpload = new Resize(imagePath, imageExt);
-    const filename = await fileUpload.save(req.file.buffer);
-    return res.status(200).json({
-      name: filename,
-      url: "https://" + req.hostname + ":3443" + "/images/" + filename,
-    });
-
-    // const img = {
-    //   data: fs.readFileSync(
-
-    //   ),
-    //   contentType: "image/png",
-    // };
-  })
+  )
   .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     res.statusCode = 403;
     res.end("PUT operation not supported on /imageUpload");
