@@ -9,6 +9,8 @@ var passport = require("passport");
 var authenticate = require("./config/authenticate");
 var config = require("./config/config");
 var mongoose = require("mongoose");
+const schedule = require("node-schedule");
+const Recipe = require("./models/recipes");
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/userRouter");
@@ -18,9 +20,37 @@ var uploadRouter = require("./routes/uploadRouter");
 const mongoUrl = config.mongoUrl;
 const connect = mongoose.connect(mongoUrl);
 
+const rule = new schedule.RecurrenceRule();
+rule.second = 50;
+rule.tz = "Etc/UTC";
+
 connect
   .then((db) => {
     console.log("Connected correctly to server");
+    schedule.scheduleJob(rule, () => {
+      Recipe.updateMany({ featured: true }, { $set: { featured: false } })
+        .then((docs) => {
+          Recipe.find({}).then((recipes) => {
+            var numberOfRecipes = recipes.length;
+            for (var i = 0; i < 9; i++) {
+              var index = Math.floor(Math.random() * numberOfRecipes);
+              console.log(recipes[index]._id);
+
+              Recipe.findByIdAndUpdate(
+                recipes[index]._id,
+                {
+                  $set: { featured: true },
+                },
+                { new: true }
+              ).then((recipe) => {
+                console.log("SUCCESS", recipe._id, recipe.featured);
+              });
+            }
+          });
+        })
+        .catch((err) => {});
+      console.log("The answer to life, the universe, and everything!");
+    });
   })
   .catch((err) => console.log("Error", err));
 
