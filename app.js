@@ -20,6 +20,32 @@ var uploadRouter = require("./routes/uploadRouter");
 const mongoUrl = config.mongoUrl;
 const connect = mongoose.connect(mongoUrl);
 
+const updateFeatured = (count) => {
+  console.log("updateFeatured");
+  if (count < 5) {
+    count = count + 1;
+    Recipe.updateMany({ featured: true }, { $set: { featured: false } })
+      .then((docs) => {
+        Recipe.find({}).then((recipes) => {
+          var numberOfRecipes = recipes.length;
+          for (var i = 0; i < 9; i++) {
+            var index = Math.floor(Math.random() * numberOfRecipes);
+
+            Recipe.findByIdAndUpdate(
+              recipes[index]._id,
+              {
+                $set: { featured: true },
+              },
+              { new: true }
+            )
+              .then((recipe) => {})
+              .catch((err) => updateFeatured(count));
+          }
+        });
+      })
+      .catch((err) => updateFeatured(count));
+  }
+};
 const rule = new schedule.RecurrenceRule();
 rule.second = 50;
 rule.tz = "Etc/UTC";
@@ -28,28 +54,8 @@ connect
   .then((db) => {
     console.log("Connected correctly to server");
     schedule.scheduleJob(rule, () => {
-      Recipe.updateMany({ featured: true }, { $set: { featured: false } })
-        .then((docs) => {
-          Recipe.find({}).then((recipes) => {
-            var numberOfRecipes = recipes.length;
-            for (var i = 0; i < 9; i++) {
-              var index = Math.floor(Math.random() * numberOfRecipes);
-              console.log(recipes[index]._id);
-
-              Recipe.findByIdAndUpdate(
-                recipes[index]._id,
-                {
-                  $set: { featured: true },
-                },
-                { new: true }
-              ).then((recipe) => {
-                console.log("SUCCESS", recipe._id, recipe.featured);
-              });
-            }
-          });
-        })
-        .catch((err) => {});
-      console.log("The answer to life, the universe, and everything!");
+      var count = 0;
+      updateFeatured();
     });
   })
   .catch((err) => console.log("Error", err));
