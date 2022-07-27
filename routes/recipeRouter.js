@@ -19,19 +19,47 @@ recipeRouter
     res.sendStatus(200);
   })
   .get(cors.cors, (req, res, next) => {
-    console.log("GET", req.query);
-    Recipe.find(req.query)
-      // .sort({})
-      .skip(req.query.offset)
-      .limit(req.query.limit)
-      .populate(["author", "comments"])
+    console.log("GET", req.query.cuisine);
+
+    var filters = {
+      title: {
+        $regex: req.query.search ? req.query.search : "",
+        $options: "i",
+      },
+    };
+    if (req.query.featured) {
+      filters = { ...filters, featured: req.query.featured };
+    }
+    if (req.query.cuisine) {
+      filters = {
+        ...filters,
+        cuisine: {
+          $in: JSON.parse(req.query.cuisine),
+          // .map((e) => RegExp(e, "i")),
+        },
+      };
+    }
+    if (req.query.course) {
+      filters = {
+        ...filters,
+        course: {
+          $in: JSON.parse(req.query.course),
+        },
+      };
+    }
+    Recipe.find(
+      filters,
+      "_id title imageUrl totalTimeInMins cuisine course diet prepTimeInMins cookTimeInMins servings featured author updatedAt createdAt"
+    )
+      .sort({ updatedAt: -1 })
+
       .then(
         (recipes) => {
-          console.log(recipes);
-          Recipe.count().then(
+          Recipe.count(filters).then(
             (count) => {
               res.statusCode = 200;
               res.setHeader("Content-Type", "application/json");
+
               res.json({
                 results: recipes,
                 limit: Number(req.query.limit),
@@ -130,7 +158,7 @@ recipeRouter
   })
   .get(cors.cors, (req, res, next) => {
     Recipe.findById(req.params.recipeId)
-      .populate("author")
+      .populate(["author", "comments"])
       .then(
         (recipe) => {
           res.statusCode = 200;
