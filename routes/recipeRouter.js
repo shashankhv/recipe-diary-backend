@@ -19,8 +19,6 @@ recipeRouter
     res.sendStatus(200);
   })
   .get(cors.cors, (req, res, next) => {
-    console.log("GET", req.query.cuisine);
-
     var filters = {
       title: {
         $regex: req.query.search ? req.query.search : "",
@@ -30,7 +28,12 @@ recipeRouter
     if (req.query.featured) {
       filters = { ...filters, featured: req.query.featured };
     }
-    if (req.query.cuisine) {
+
+    if (
+      req.query.cuisine &&
+      req.query.cuisine != "null" &&
+      req.query.cuisine != "[]"
+    ) {
       filters = {
         ...filters,
         cuisine: {
@@ -39,7 +42,12 @@ recipeRouter
         },
       };
     }
-    if (req.query.course) {
+
+    if (
+      req.query.course &&
+      req.query.course != "null" &&
+      req.query.course != "[]"
+    ) {
       filters = {
         ...filters,
         course: {
@@ -47,12 +55,24 @@ recipeRouter
         },
       };
     }
+
+    if (req.query.diet && req.query.diet != "null" && req.query.diet != "[]") {
+      filters = {
+        ...filters,
+        diet: {
+          $in: JSON.parse(req.query.diet),
+          // .map((e) => RegExp(e, "i")),
+        },
+      };
+    }
+
     Recipe.find(
       filters,
       "_id title imageUrl totalTimeInMins cuisine course diet prepTimeInMins cookTimeInMins servings featured author updatedAt createdAt"
     )
       .sort({ updatedAt: -1 })
-
+      .limit(req.query.limit)
+      .skip(req.query.offset)
       .then(
         (recipes) => {
           Recipe.count(filters).then(
@@ -150,9 +170,52 @@ recipeRouter
     res.end("DELETE operation not supported on /recipes/bulkUpload");
   });
 
+recipeRouter
+  .route("/filters")
+  .options(cors.corsWithOptions, (req, res) => {
+    res.sendStatus(200);
+  })
+  .get(cors.cors, (req, res, next) => {
+    Recipe.find(
+      {},
+      "cuisine course diet",
+      (err, docs) => {
+        if (err) {
+          return next(err);
+        }
+        // var recipes = docs.map((doc) => doc._doc);
+        var filters = {
+          cuisine: [],
+          course: [],
+          diet: [],
+          // servings: [],
+        };
+        docs.map((recipe) => {
+          filters["cuisine"].push(recipe.cuisine);
+          filters["course"].push(recipe.course);
+          filters["diet"].push(recipe.diet);
+          // filters["servings"].push(recipe.servings);
+        });
+
+        filters["cuisine"] = [...new Set(filters["cuisine"])].sort();
+        filters["course"] = [...new Set(filters["course"])].sort();
+        filters["diet"] = [...new Set(filters["diet"])].sort();
+        // filters["servings"] = [...new Set(filters["servings"])].sort(
+        // (a, b) => a - b
+        // );
+
+        // console.log("User  ", recipes);
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json(filters);
+      },
+      (err) => next(err)
+    );
+  });
+
 /* api endpoint for /recipes/recipeId  */
 recipeRouter
-  .route("/:recipeId")
+  .route("/id/:recipeId")
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
@@ -216,7 +279,7 @@ recipeRouter
   });
 
 recipeRouter
-  .route("/:recipeId/comments")
+  .route("/id/:recipeId/comments")
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
@@ -372,7 +435,7 @@ recipeRouter
 /* api endpoint for /recipes/recipeId  */
 
 recipeRouter
-  .route("/:recipeId/comments/:commentId")
+  .route("/id/:recipeId/comments/:commentId")
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
