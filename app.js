@@ -18,7 +18,11 @@ var recipeRouter = require("./routes/recipeRouter");
 var uploadRouter = require("./routes/uploadRouter");
 
 const mongoUrl = config.mongoUrl;
-const connect = mongoose.connect(mongoUrl);
+const connect = mongoose.connect(mongoUrl, {
+  useUnifiedTopology: true,
+  useNewUrlParser: true,
+  autoIndex: true, //make this also true
+});
 
 const updateFeatured = (count) => {
   console.log("updateFeatured");
