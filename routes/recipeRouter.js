@@ -6,7 +6,7 @@ const cors = require("./cors");
 const Recipe = require("../models/recipes");
 const Comment = require("../models/comments");
 const ChildComment = require("../models/childComment");
-
+const UserPropUpdate = require("../components/UserPropUpdate");
 const User = require("../models/users");
 
 var recipeRouter = express.Router();
@@ -96,10 +96,16 @@ recipeRouter
   })
   .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     req.body.author = req.user._id;
-    req.body.featured = true;
+    req.body.featured = false;
     Recipe.create(req.body)
       .then(
         (recipe) => {
+          req.body = {
+            property: "published",
+            category: "recipes",
+            id: recipe._id,
+          };
+          UserPropUpdate.addRecipesToUser(req, res, next, false);
           res.statusCode = 200;
           res.setHeader("Content-Type", "application/json");
           res.json([recipe]);
