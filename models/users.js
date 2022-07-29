@@ -44,6 +44,12 @@ var userSchema = new Schema({
       default: [],
     },
   },
+  published: {
+    recipes: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }],
+      default: [],
+    },
+  },
   recents: {
     recipes: {
       type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }],
