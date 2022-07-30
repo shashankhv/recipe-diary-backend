@@ -59,7 +59,7 @@ connect
     console.log("Connected correctly to server");
     schedule.scheduleJob(rule, () => {
       var count = 0;
-      updateFeatured();
+      updateFeatured(count);
     });
   })
   .catch((err) => console.log("Error", err));

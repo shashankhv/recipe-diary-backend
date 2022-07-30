@@ -60,7 +60,7 @@ uploadRouter
   .post(
     cors.corsWithOptions,
     authenticate.verifyUser,
-    upload().single("imageFile"),
+    upload().single("file"),
     async (req, res, next) => {
       if (!req.file) {
         return res.status(401).json({ error: "Please provide an image" });
@@ -72,7 +72,7 @@ uploadRouter
       const filename = await fileUpload.save(req.file.buffer);
       return res.status(200).json({
         name: filename,
-        url: `https://${req.hostname}:3443/images/${req.body.folder}/${filename}`,
+        url: `https://${req.hostname}:3443/images/${req.query.folder}/${filename}`,
       });
     }
   )
