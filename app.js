@@ -25,7 +25,6 @@ const connect = mongoose.connect(mongoUrl, {
 });
 
 const updateFeatured = (count) => {
-  console.log("updateFeatured");
   if (count < 5) {
     count = count + 1;
     Recipe.updateMany({ featured: true }, { $set: { featured: false } })
@@ -59,13 +58,12 @@ rule.tz = "Etc/UTC";
 
 connect
   .then((db) => {
-    console.log("Connected correctly to server");
     schedule.scheduleJob(rule, () => {
       var count = 0;
       updateFeatured(count);
     });
   })
-  .catch((err) => console.log("Error", err));
+  .catch((err) => {});
 
 var app = express();
 

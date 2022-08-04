@@ -14,7 +14,6 @@ class Resize {
     return path.resolve(`${this.folder}/${filename}`);
   };
   save = async (buffer) => {
-    console.log(this.folder, this.fileExt);
     const filename = `${v4()}.${this.fileExt}`;
     const filepath = this.filepath(filename);
 

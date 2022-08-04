@@ -5,7 +5,6 @@ var mongoose = require("mongoose");
 
 const UserPropUpdate = {
   getRecipesByProperty: (req, res, next, endpoint) => {
-    console.log(`${req.query.property}.${req.query.category}`);
     User.findById(req.user._id)
       .populate({
         path: `${req.query.property}.${req.query.category}`,
@@ -50,14 +49,9 @@ const UserPropUpdate = {
                     user[req.body.property][req.body.category] = [
                       ...new Set(tempArr),
                     ];
-                    console.log(
-                      "here too",
-                      user[req.body.property][req.body.category]
-                    );
 
                     user.save().then(
                       (user) => {
-                        // console.log("USER HERE", user);
                         if (endpoint === true) {
                           res.statusCode = 200;
                           res.setHeader("Content-Type", "application/json");

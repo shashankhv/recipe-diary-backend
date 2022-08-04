@@ -40,7 +40,6 @@ userRouter.get(
     User.findById(req.user._id)
       .then(
         (user) => {
-          console.log("here");
           res.statusCode = 200;
           res.setHeader("Content-Type", "application/json");
           res.json(user);
@@ -76,7 +75,6 @@ userRouter.post("/signup", cors.corsWithOptions, function (req, res, next) {
             return;
           }
           passport.authenticate("local")(req, res, () => {
-            console.log(req, res);
             res.statusCode = 200;
             res.setHeader("Content-Type", "application/json");
             res.json({ success: true, status: "Registration Successful!" });
@@ -115,7 +113,6 @@ userRouter.post("/login", cors.corsWithOptions, (req, res, next) => {
         // .populate(["published.recipes"])
         .then(
           (user) => {
-            console.log(user);
             res.statusCode = 200;
             res.setHeader("Content-Type", "application/json");
             res.json({
@@ -138,7 +135,6 @@ userRouter.post("/usernameCheck", cors.corsWithOptions, (req, res, next) => {
       return next(err);
     }
     var tempData = docs.map((doc) => doc.username);
-    console.log(tempData, req.body);
     if (tempData.includes(req.body.username)) {
       statusCode = 500;
       res.setHeader("Content-Type", "application/json");
@@ -165,7 +161,6 @@ userRouter.post(
     )
       .then(
         (user) => {
-          console.log("User Updated ", user);
           res.statusCode = 200;
           res.setHeader("Content-Type", "application/json");
           res.json(user);
@@ -190,7 +185,6 @@ userRouter.post(
     )
       .then(
         (user) => {
-          console.log("User Updated ", user);
           res.statusCode = 200;
           res.setHeader("Content-Type", "application/json");
           res.json(user);
