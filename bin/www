@@ -16,7 +16,7 @@ var fs = require("fs");
 
 var port = normalizePort(process.env.PORT || "3000");
 app.set("port", port);
-app.set("secPort", port + 443);
+// app.set("secPort", port + 443);
 /**
  * Create HTTP server.
  */
@@ -31,18 +31,18 @@ server.listen(port, () => {});
 server.on("error", onError);
 server.on("listening", onListening);
 
-var options = {
-  key: fs.readFileSync(__dirname + "/private.key"),
-  cert: fs.readFileSync(__dirname + "/certificate.pem"),
-};
+// var options = {
+//   key: fs.readFileSync(__dirname + "/private.key"),
+//   cert: fs.readFileSync(__dirname + "/certificate.pem"),
+// };
 
-var secureServer = https.createServer(options, app);
+// var secureServer = https.createServer(options, app);
 
-secureServer.listen(app.get("secPort"), () => {
-  console.log("Secure Server listening on port", app.get("secPort"));
-});
-secureServer.on("error", onError);
-secureServer.on("listening", onListening);
+// secureServer.listen(app.get("secPort"), () => {
+//   console.log("Secure Server listening on port", app.get("secPort"));
+// });
+// secureServer.on("error", onError);
+// secureServer.on("listening", onListening);
 /**
  * Normalize a port into a number, string, or false.
  */
