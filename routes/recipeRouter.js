@@ -105,7 +105,7 @@ recipeRouter
             category: "recipes",
             id: recipe._id,
           };
-          UserPropUpdate.addRecipeToUser(req, res, next, false);
+          UserPropUpdate.addRecipesToUser(req, res, next, false);
           res.statusCode = 200;
           res.setHeader("Content-Type", "application/json");
           res.json([recipe]);
@@ -158,11 +158,8 @@ recipeRouter
       Recipe.insertMany(req.body)
         .then(
           (docs) => {
-            UserPropUpdate.addRecipesToUser(req, res, next, false);
-
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
-            res.json(docs);
+            var recipes = docs.map((doc) => doc._doc._id);
+            UserPropUpdate.addRecipesToUser(req, res, next, recipes);
           },
           (err) => next(err)
         )
