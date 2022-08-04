@@ -58,12 +58,15 @@ rule.tz = "Etc/UTC";
 
 connect
   .then((db) => {
+    console.log("Connected here", db);
     schedule.scheduleJob(rule, () => {
       var count = 0;
       updateFeatured(count);
     });
   })
-  .catch((err) => {});
+  .catch((err) => {
+    console.log("Connected failed here", err);
+  });
 
 var app = express();
 
