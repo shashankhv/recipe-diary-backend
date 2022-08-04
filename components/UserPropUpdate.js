@@ -33,6 +33,52 @@ const UserPropUpdate = {
           if (user != null) {
             if (req.body.category === "recipes") {
               if (user[req.body.property][req.body.category]) {
+                var tempArr = user[req.body.property][req.body.category].map(
+                  (e) => e._id.toString()
+                );
+                tempArr = [req.body.id, ...tempArr];
+                user[req.body.property][req.body.category] = [
+                  ...new Set(tempArr),
+                ];
+
+                user.save().then(
+                  (user) => {
+                    if (endpoint === true) {
+                      res.statusCode = 200;
+                      res.setHeader("Content-Type", "application/json");
+                      res.json(user[req.body.property][req.body.category]);
+                    }
+                  },
+                  (err) => next(err)
+                );
+              } else {
+                err = new Error(
+                  req.body.category + " is not a category in favorites"
+                );
+                err.status = 404;
+                return next(err);
+              }
+            }
+          } else {
+            err = new Error("User favorites not found");
+            err.status = 404;
+            return next(err);
+          }
+        },
+        (err) => next(err)
+      )
+      .catch((err) => next(err));
+
+    return true;
+  },
+  addRecipeToUser: (req, res, next, endpoint) => {
+    User.findById(req.user._id)
+      // .populate("favorites.recipes")
+      .then(
+        (user) => {
+          if (user != null) {
+            if (req.body.category === "recipes") {
+              if (user[req.body.property][req.body.category]) {
                 Recipe.findById(req.body.id, (err, recipe) => {
                   if (err) {
                     err = new Error(

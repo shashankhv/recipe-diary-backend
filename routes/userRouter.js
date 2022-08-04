@@ -5,7 +5,7 @@ var passport = require("passport");
 var authenticate = require("../config/authenticate");
 const cors = require("./cors");
 const UserPropUpdate = require("../components/UserPropUpdate");
-// const { addRecipesToUser } = UserPropUpdate;
+// const { addRecipeToUser } = UserPropUpdate;
 var userRouter = express.Router();
 userRouter.use(bodyParser.json());
 
@@ -239,7 +239,7 @@ userRouter
     UserPropUpdate.getRecipesByProperty(req, res, next, true);
   })
   .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-    UserPropUpdate.addRecipesToUser(req, res, next, true);
+    UserPropUpdate.addRecipeToUser(req, res, next, true);
   })
   .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     res.statusCode = 403;
