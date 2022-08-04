@@ -4,7 +4,6 @@ const User = require("../models/users");
 var passport = require("passport");
 var authenticate = require("../config/authenticate");
 const cors = require("./cors");
-const Recipe = require("../models/recipes");
 const UserPropUpdate = require("../components/UserPropUpdate");
 // const { addRecipesToUser } = UserPropUpdate;
 var userRouter = express.Router();

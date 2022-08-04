@@ -32,18 +32,21 @@ const updateFeatured = (count) => {
       .then((docs) => {
         Recipe.find({}).then((recipes) => {
           var numberOfRecipes = recipes.length;
-          for (var i = 0; i < 9; i++) {
-            var index = Math.floor(Math.random() * numberOfRecipes);
+          if (numberOfRecipes < 9) {
+          } else {
+            for (var i = 0; i < 9; i++) {
+              var index = Math.floor(Math.random() * numberOfRecipes);
 
-            Recipe.findByIdAndUpdate(
-              recipes[index]._id,
-              {
-                $set: { featured: true },
-              },
-              { new: true }
-            )
-              .then((recipe) => {})
-              .catch((err) => updateFeatured(count));
+              Recipe.findByIdAndUpdate(
+                recipes[index]._id,
+                {
+                  $set: { featured: true },
+                },
+                { new: true }
+              )
+                .then((recipe) => {})
+                .catch((err) => updateFeatured(count));
+            }
           }
         });
       })
@@ -51,7 +54,7 @@ const updateFeatured = (count) => {
   }
 };
 const rule = new schedule.RecurrenceRule();
-rule.second = 50;
+rule.hour = 00;
 rule.tz = "Etc/UTC";
 
 connect
