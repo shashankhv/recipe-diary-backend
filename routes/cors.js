@@ -12,10 +12,10 @@ const whitelist = [
 
 var corsOptionsDelegate = (req, callback) => {
   var corsOptions;
-  // if (whitelist.indexOf(req.header("Origin")) !== -1) {
-  if (true) {
+  if (whitelist.indexOf(req.header("Origin")) !== -1) {
+    // if (true) {
     corsOptions = {
-      origin: false,
+      origin: true,
     };
   } else {
     corsOptions = {
