@@ -69,16 +69,15 @@ var app = express();
 
 // middleware to redirect to secureServer
 app.all("*", (req, res, next) => {
-  return next();
-
-  // if (req.secure) {
-  // } else {
-  //   // redirecting to secure server
-  //   // res.redirect(
-  //   //   307,
-  //   //   "https://" + req.hostname + ":" + app.get("secPort") + req.url
-  //   // );
-  // }
+  if (req.secure) {
+    return next();
+  } else {
+    // redirecting to secure server
+    // res.redirect(
+    //   307,
+    //   "https://" + req.hostname + ":" + app.get("secPort") + req.url
+    // );
+  }
 });
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
