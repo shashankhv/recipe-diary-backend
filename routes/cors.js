@@ -3,7 +3,7 @@ const cors = require("cors");
 const app = express();
 
 const whitelist = [
-  "https://localhost:3000",
+  "http://localhost:3000",
   "https://localhost:3443",
   "https://localhost:3001",
   "http://localhost:3001",
