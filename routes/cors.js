@@ -9,7 +9,9 @@ const whitelist = [
   "http://localhost:3001",
   "http://localhost:3002",
   "https://build-my-stack.github.io/recipe-diary-frontend",
+  "https://gavindmello97.github.io/recipe-diary-frontend/",
   "https://build-my-stack.github.io",
+  "https://gavindmello97.github.io",
 ];
 
 var corsOptionsDelegate = (req, callback) => {
