@@ -9,6 +9,7 @@ const whitelist = [
   "http://localhost:3001",
   "http://localhost:3002",
   "https://eliterudy.github.io/recipe-diary-frontend",
+  "https://eliterudy.github.io/recipe-diary-frontend/"
   "https://gavin97dmello.github.io/recipe-diary-frontend/",
   "https://build-my-stack.github.io",
   "https://gavindmello97.github.io",
