@@ -72,7 +72,7 @@ uploadRouter
       const filename = await fileUpload.save(req.file.buffer);
       return res.status(200).json({
         name: filename,
-        url: `https://${req.hostname}:3443/images/${req.query.folder}/${filename}`,
+        url: `https://${req.hostname}:3000/images/${req.query.folder}/${filename}`,
       });
     }
   )

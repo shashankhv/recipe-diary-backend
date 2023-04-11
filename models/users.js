@@ -29,6 +29,10 @@ var userSchema = new Schema({
     type: String,
     default: "",
   },
+  email: {
+    type: String,
+    default: "",
+  },
   fullname: {
     type: String,
     default: "",
