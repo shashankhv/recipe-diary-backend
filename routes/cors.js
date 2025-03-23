@@ -4,7 +4,8 @@ const whitelist = [
   "http://localhost:5173",
   "https://localhost:5173",
   // add production frontend URL too if needed
-  "https://shashankhv.github.io/recipe-diary-frontend/"
+  "https://shashankhv.github.io",
+  "https://shashankhv.github.io/"
 ];
 
 const corsOptionsDelegate = function (req, callback) {
