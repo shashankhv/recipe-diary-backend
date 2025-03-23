@@ -16,6 +16,7 @@ var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/userRouter");
 var recipeRouter = require("./routes/recipeRouter");
 var uploadRouter = require("./routes/uploadRouter");
+require("dotenv").config();
 
 const mongoUrl = config.mongoUrl;
 const connect = mongoose.connect(process.env.MONGODB_URI, {

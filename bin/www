@@ -9,7 +9,7 @@ var debug = require("debug")("recipe-diary-backend:server");
 var http = require("http");
 var https = require("https");
 var fs = require("fs");
-
+require("dotenv").config();
 /**
  * Get port from environment and store in Express.
  */
