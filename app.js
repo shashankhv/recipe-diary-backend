@@ -7,8 +7,6 @@ var logger = require("morgan");
 var session = require("express-session");
 var FileStore = require("session-file-store")(session);
 var passport = require("passport");
-var authenticate = require("./config/authenticate");
-var config = require("./config/config");
 var mongoose = require("mongoose");
 const schedule = require("node-schedule");
 const Recipe = require("./models/recipes");
@@ -16,9 +14,8 @@ var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/userRouter");
 var recipeRouter = require("./routes/recipeRouter");
 var uploadRouter = require("./routes/uploadRouter");
-require("dotenv").config();
 
-const mongoUrl = config.mongoUrl;
+const mongoUrl = process.env.MONGODB_URI
 const connect = mongoose.connect(process.env.MONGODB_URI, {
   useUnifiedTopology: true,
   useNewUrlParser: true,
