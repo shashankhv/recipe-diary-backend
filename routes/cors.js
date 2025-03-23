@@ -1,31 +1,31 @@
-const express = require("express");
 const cors = require("cors");
-const app = express();
 
 const whitelist = [
-  "http://localhost:3000",
-  "https://localhost:3443",
-  "https://localhost:3001",
-  "http://localhost:3001",
-  "http://localhost:3002",
-  "https://eliterudy.github.io/recipe-diary-frontend",
-  "https://eliterudy.github.io/recipe-diary-frontend/"
+  "http://localhost:5173",
+  "https://localhost:5173",
+  // add production frontend URL too if needed
+  "https://shashankhv.github.io/recipe-diary-frontend/"
 ];
 
-var corsOptionsDelegate = (req, callback) => {
-  var corsOptions;
-  if (whitelist.indexOf(req.header("Origin")) !== -1) {
-    // if (true) {
+const corsOptionsDelegate = function (req, callback) {
+  const origin = req.header("Origin");
+  let corsOptions;
+
+  if (whitelist.includes(origin)) {
     corsOptions = {
-      origin: true,
+      origin: true, // reflects request origin
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+      credentials: true,
     };
   } else {
-    corsOptions = {
-      origin: true,
-    };
+    corsOptions = { origin: false }; // deny others
   }
+
   callback(null, corsOptions);
 };
 
-exports.cors = cors();
-exports.corsWithOptions = cors(corsOptionsDelegate);
+module.exports = {
+  cors: cors(),
+  corsWithOptions: cors(corsOptionsDelegate),
+};

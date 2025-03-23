@@ -13,6 +13,12 @@ userRouter.options("*", cors.corsWithOptions, (req, res) => {
   res.sendStatus(200);
 });
 
+// ✅ Apply cors globally if needed
+userRouter.use(cors.corsWithOptions);
+// ✅ Apply cors globally if needed
+
+
+
 /* GET users listing. */
 userRouter.get(
   "/",

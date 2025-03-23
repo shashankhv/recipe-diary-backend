@@ -11,7 +11,6 @@ var config = require("./config/config");
 var mongoose = require("mongoose");
 const schedule = require("node-schedule");
 const Recipe = require("./models/recipes");
-
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/userRouter");
 var recipeRouter = require("./routes/recipeRouter");
@@ -82,7 +81,7 @@ app.all("*", (req, res, next) => {
 });
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "jade");
+app.set("view engine", "pug");
 
 app.use(logger("dev"));
 app.use(express.json({ limit: "50mb" }));
