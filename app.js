@@ -1,3 +1,4 @@
+require('dotenv').config();
 var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
@@ -17,7 +18,7 @@ var recipeRouter = require("./routes/recipeRouter");
 var uploadRouter = require("./routes/uploadRouter");
 
 const mongoUrl = config.mongoUrl;
-const connect = mongoose.connect(mongoUrl, {
+const connect = mongoose.connect(process.env.MONGODB_URI, {
   useUnifiedTopology: true,
   useNewUrlParser: true,
   autoIndex: true, //make this also true

@@ -15,12 +15,12 @@ passport.deserializeUser(User.deserializeUser());
 /* To generate Token using JwtWebToken and use sign method */
 exports.getToken = (user_id) => {
   // params are payload data, secret key for encription and other options
-  return jwt.sign(user_id, config.secretKey);
+  return jwt.sign(user_id, process.env.JWT_SECRET);
 };
 
 var optionsForJWTStragety = {};
 optionsForJWTStragety.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-optionsForJWTStragety.secretOrKey = config.secretKey;
+optionsForJWTStragety.secretOrKey = process.env.JWT_SECRET;
 
 exports.jwtPassport = passport.use(
   new JtwStrategy(optionsForJWTStragety, (jwt_payload, done) => {

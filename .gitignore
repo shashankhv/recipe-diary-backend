@@ -5,3 +5,7 @@ node_modules
 # *.csr
 # *.pem
 # *.key
+
+# Environment variables
+.env.local
+.env.*.local
